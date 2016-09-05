@@ -178,6 +178,7 @@ def _upload_to_a8(filepath, mode=None):
 # Install with opkg. Install on one node and run postinstall on all:
 # # # #
 
+CONTROL_FILES = 'ar p {ipk} control.tar.gz | tar tzf -'
 RUN_POSTINSTALL = 'ar  p {ipk} control.tar.gz | tar xzf - ./postinst -O | sh'
 
 @exp_task
@@ -200,7 +201,10 @@ def _opkg_install(package):
 @roles('nodes')
 def _ipk_post_install(package):
     """Run missing post install on all nodes."""
-    return run(RUN_POSTINSTALL.format(ipk=package), pty=False).return_code
+    if './postinst' in run(CONTROL_FILES.format(ipk=package)):
+        return run(RUN_POSTINSTALL.format(ipk=package), pty=False).return_code
+    else:
+        return 0
 
 
 # # # # # # # # # # # # # # # # # # # # # # # # # #
